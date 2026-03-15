@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StrangerLink v2</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- ─── Header ──────────────────────────────────────────────────────── -->
+  <header>
+    <div class="logo">
+      <span class="logo-bracket">[</span>STRANGER<span class="logo-accent">LINK</span><span class="logo-bracket">]</span>
+    </div>
+    <div class="status-bar">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">OFFLINE</span>
+      <span class="sep">|</span>
+      <!-- ✅ Online counter -->
+      <span class="online-badge">
+        <span class="online-pulse"></span>
+        <span id="onlineCount">0</span> online
+      </span>
+    </div>
+  </header>
+
+  <!-- ─── Banned screen ───────────────────────────────────────────────── -->
+  <section id="bannedScreen" class="screen">
+    <div class="banned-content">
+      <div class="banned-icon">⛔</div>
+      <h2>You Have Been Banned</h2>
+      <p id="bannedMsg">You have been banned for violating community guidelines.</p>
+    </div>
+  </section>
+
+  <!-- ─── Landing screen ──────────────────────────────────────────────── -->
+  <section id="landingScreen" class="screen active">
+    <div class="landing-content">
+      <h1 class="glitch" data-text="TALK TO STRANGERS">TALK TO STRANGERS</h1>
+      <p class="tagline">Anonymous. Random. Real-time.</p>
+
+      <div class="mode-select">
+        <label class="mode-btn active" id="modeVideo">
+          <input type="radio" name="mode" value="video" checked hidden />
+          <span class="mode-icon">◉</span> VIDEO + TEXT
+        </label>
+        <label class="mode-btn" id="modeText">
+          <input type="radio" name="mode" value="text" hidden />
+          <span class="mode-icon">◈</span> TEXT ONLY
+        </label>
+      </div>
+
+      <button class="btn btn-start" id="btnStart">
+        <span class="btn-text">CONNECT TO STRANGER</span>
+        <span class="btn-arrow">→</span>
+      </button>
+      <p class="disclaimer">By clicking connect you agree to be matched with a random user. Be respectful.</p>
+    </div>
+    <div class="landing-bg-grid" aria-hidden="true"></div>
+  </section>
+
+  <!-- ─── Chat screen ─────────────────────────────────────────────────── -->
+  <section id="chatScreen" class="screen">
+
+    <!-- Video panel -->
+    <div id="videoPanel" class="video-panel">
+      <div class="video-wrap" id="remoteWrap">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <div class="video-label">STRANGER</div>
+        <div class="video-status" id="remoteStatus">waiting for connection…</div>
+      </div>
+      <div class="video-wrap self" id="localWrap">
+        <video id="localVideo" autoplay playsinline muted></video>
+        <div class="video-label">YOU</div>
+      </div>
+    </div>
+
+    <!-- Chat panel -->
+    <div class="chat-panel">
+
+      <div class="chat-header">
+        <span id="chatStatusLabel">● SEARCHING…</span>
+        <!-- ✅ Report button -->
+        <button class="btn btn-report" id="btnReport" disabled title="Report this user">
+          🚩 REPORT
+        </button>
+      </div>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="sys-msg">Connecting you to a random stranger…</div>
+      </div>
+
+      <!-- ✅ Typing indicator -->
+      <div class="typing-indicator" id="typingIndicator">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-label">Stranger is typing…</span>
+      </div>
+
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Type a message…" maxlength="500" autocomplete="off" disabled />
+        <button class="btn btn-send" id="btnSend" disabled>SEND</button>
+      </div>
+
+      <div class="chat-actions">
+        <!-- ✅ Next Stranger button -->
+        <button class="btn btn-next" id="btnNext">⏭ NEXT STRANGER</button>
+        <button class="btn btn-stop" id="btnStop">✕ STOP</button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ✅ Report modal -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal">
+      <h3 class="modal-title">🚩 Report User</h3>
+      <p class="modal-desc">Select a reason for reporting this stranger:</p>
+      <div class="report-reasons">
+        <label class="reason-opt"><input type="radio" name="reason" value="Harassment" /> Harassment</label>
+        <label class="reason-opt"><input type="radio" name="reason" value="Nudity/Sexual content" /> Nudity / Sexual content</label>
+        <label class="reason-opt"><input type="radio" name="reason" value="Hate speech" /> Hate speech</label>
+        <label class="reason-opt"><input type="radio" name="reason" value="Spam/Bot" /> Spam / Bot</label>
+        <label class="reason-opt"><input type="radio" name="reason" value="Underage user" /> Underage user</label>
+        <label class="reason-opt"><input type="radio" name="reason" value="Other" checked /> Other</label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="btnReportCancel">CANCEL</button>
+        <button class="btn btn-report-submit" id="btnReportSubmit">SUBMIT REPORT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
