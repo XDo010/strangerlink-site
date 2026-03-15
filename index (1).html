@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NutVana — Premium Dry Fruits</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=Cormorant+Garamond:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5EDD8; --amber: #C8873A; --deep: #1A0F00;
+    --warm: #8B4513; --gold: #D4A853; --light: #FDF6E9; --text: #2C1810;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--deep); color:var(--cream); font-family:'Cormorant Garamond',serif; overflow-x:hidden; cursor:none; }
+
+  /* CURSOR */
+  .cursor { position:fixed; width:14px; height:14px; background:var(--gold); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:width .3s,height .3s,background .3s; mix-blend-mode:screen; }
+  .cursor.hov { width:32px; height:32px; background:var(--amber); }
+  .cursor-ring { position:fixed; width:44px; height:44px; border:1px solid rgba(212,168,83,.4); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:all .15s ease-out; }
+
+  /* NAV */
+  nav { position:fixed; top:0; left:0; right:0; z-index:500; display:flex; justify-content:space-between; align-items:center; padding:26px 60px; }
+  nav::before { content:''; position:absolute; inset:0; background:linear-gradient(to bottom,rgba(10,6,0,.92) 0%,transparent 100%); pointer-events:none; }
+  .nav-logo { font-family:'Playfair Display',serif; font-size:1.55rem; font-weight:900; color:var(--gold); letter-spacing:.05em; text-transform:uppercase; position:relative; }
+  .nav-logo span { color:var(--cream); }
+  .nav-links { display:flex; gap:36px; list-style:none; position:relative; }
+  .nav-links a { color:var(--cream); text-decoration:none; font-family:'Space Mono',monospace; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; opacity:.62; transition:opacity .3s,color .3s; }
+  .nav-links a:hover { opacity:1; color:var(--gold); }
+  .nav-cta { background:var(--amber)!important; color:var(--deep)!important; padding:10px 22px; opacity:1!important; font-weight:700!important; }
+  .nav-cta:hover { background:var(--gold)!important; }
+
+  /* HERO */
+  .hero { position:relative; width:100%; height:100vh; overflow:hidden; background:radial-gradient(ellipse at 60% 40%,#2a1500 0%,#1A0F00 60%,#080400 100%); }
+  #hero-canvas { position:absolute; inset:0; width:100%; height:100%; }
+  .hero-ui { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; padding:0 70px; pointer-events:none; }
+  .hero-tag { font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.28em; color:var(--amber); text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:14px; animation:fadeUp .9s .3s both; }
+  .hero-tag::before { content:''; width:34px; height:1px; background:var(--amber); display:block; }
+  .hero h1 { font-family:'Playfair Display',serif; font-size:clamp(3rem,6.5vw,5.8rem); font-weight:900; line-height:1.02; color:var(--cream); animation:fadeUp .9s .5s both; }
+  .hero h1 em { font-style:italic; color:var(--gold); display:block; }
+  .hero-sub { font-size:1.1rem; color:rgba(245,237,216,.5); line-height:1.7; max-width:400px; margin-top:16px; font-weight:300; animation:fadeUp .9s .7s both; }
+  .hero-hint { position:absolute; bottom:34px; left:50%; transform:translateX(-50%); font-family:'Space Mono',monospace; font-size:.56rem; letter-spacing:.22em; color:rgba(245,237,216,.3); text-align:center; animation:pulse 2.5s 2s infinite; pointer-events:none; }
+  .hero-hint span { display:block; font-size:1.1rem; margin-bottom:6px; }
+  .scroll-ind { position:absolute; bottom:36px; left:70px; display:flex; align-items:center; gap:12px; font-family:'Space Mono',monospace; font-size:.56rem; letter-spacing:.2em; color:rgba(245,237,216,.28); animation:fadeUp 1s 1.2s both; }
+  .scroll-line { width:36px; height:1px; background:rgba(245,237,216,.2); position:relative; overflow:hidden; }
+  .scroll-line::after { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:var(--gold); animation:sl 2s infinite; }
+  @keyframes sl { to{left:100%} }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(36px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes pulse { 0%,100%{opacity:.3} 50%{opacity:.68} }
+
+  /* LABEL FLOATING */
+  .fruit-label { position:fixed; background:rgba(26,15,0,.88); border:1px solid rgba(212,168,83,.35); padding:8px 14px; pointer-events:none; z-index:400; display:none; backdrop-filter:blur(8px); }
+  .fruit-label-name { font-family:'Playfair Display',serif; font-size:.95rem; font-weight:700; color:var(--gold); }
+  .fruit-label-hint { font-family:'Space Mono',monospace; font-size:.52rem; letter-spacing:.12em; color:rgba(245,237,216,.45); text-transform:uppercase; margin-top:2px; }
+
+  /* MODAL */
+  .modal-bg { position:fixed; inset:0; z-index:1000; background:rgba(8,4,0,.78); backdrop-filter:blur(14px); display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .4s; }
+  .modal-bg.open { opacity:1; pointer-events:all; }
+  .modal { background:linear-gradient(135deg,#1e1000,#2c1a00,#180c00); border:1px solid rgba(212,168,83,.18); width:min(640px,94vw); max-height:92vh; overflow-y:auto; position:relative; transform:scale(.88) translateY(28px); transition:transform .45s cubic-bezier(.16,1,.3,1); box-shadow:0 40px 80px rgba(0,0,0,.75); }
+  .modal-bg.open .modal { transform:scale(1) translateY(0); }
+  .modal-hero { width:100%; height:260px; display:flex; align-items:center; justify-content:center; position:relative; }
+  .modal-emoji { font-size:5.5rem; animation:mFloat 3s ease-in-out infinite; filter:drop-shadow(0 24px 40px rgba(0,0,0,.6)); position:relative; z-index:1; }
+  @keyframes mFloat { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-14px) rotate(3deg)} }
+  .modal-close { position:absolute; top:16px; right:18px; background:rgba(245,237,216,.07); border:1px solid rgba(245,237,216,.1); color:var(--cream); width:34px; height:34px; border-radius:50%; font-size:.95rem; display:flex; align-items:center; justify-content:center; cursor:none; transition:background .3s; }
+  .modal-close:hover { background:rgba(200,135,58,.3); }
+  .modal-body { padding:30px 38px 38px; }
+  .m-tag { font-family:'Space Mono',monospace; font-size:.56rem; letter-spacing:.2em; color:var(--amber); text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+  .m-tag::before { content:''; width:22px; height:1px; background:var(--amber); display:block; }
+  .m-name { font-family:'Playfair Display',serif; font-size:2.1rem; font-weight:900; color:var(--cream); line-height:1.1; margin-bottom:5px; }
+  .m-origin { font-size:.92rem; color:rgba(245,237,216,.38); margin-bottom:20px; }
+  .m-badges { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+  .badge { font-family:'Space Mono',monospace; font-size:.52rem; letter-spacing:.1em; padding:5px 11px; text-transform:uppercase; }
+  .b-org { background:rgba(45,90,39,.35); color:#8bc87f; border:1px solid rgba(45,90,39,.4); }
+  .b-cert { background:rgba(212,168,83,.1); color:var(--gold); border:1px solid rgba(212,168,83,.22); }
+  .b-del { background:rgba(200,135,58,.1); color:var(--amber); border:1px solid rgba(200,135,58,.22); }
+  .m-desc { font-size:1.03rem; color:rgba(245,237,216,.68); line-height:1.78; margin-bottom:26px; font-weight:300; }
+  .m-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(245,237,216,.05); border:1px solid rgba(245,237,216,.05); margin-bottom:26px; }
+  .m-stat { padding:16px 18px; background:rgba(26,15,0,.65); text-align:center; }
+  .m-stat-v { font-family:'Playfair Display',serif; font-size:1.4rem; font-weight:700; color:var(--gold); display:block; margin-bottom:3px; }
+  .m-stat-l { font-family:'Space Mono',monospace; font-size:.52rem; letter-spacing:.12em; color:rgba(245,237,216,.32); text-transform:uppercase; }
+  .m-prices { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:26px; }
+  .price-pill { padding:10px 18px; border:1px solid rgba(212,168,83,.22); cursor:none; transition:all .3s; text-align:center; }
+  .price-pill:hover,.price-pill.act { background:var(--amber); border-color:var(--amber); }
+  .price-pill .pw { font-family:'Space Mono',monospace; font-size:.55rem; letter-spacing:.1em; color:rgba(245,237,216,.46); display:block; margin-bottom:2px; }
+  .price-pill.act .pw { color:var(--deep); }
+  .price-pill .pp { font-family:'Playfair Display',serif; font-size:1.18rem; font-weight:700; color:var(--cream); }
+  .price-pill.act .pp { color:var(--deep); }
+  .m-actions { display:flex; gap:10px; }
+  .btn-cart { flex:1; background:var(--amber); color:var(--deep); padding:15px; font-family:'Space Mono',monospace; font-size:.66rem; letter-spacing:.15em; text-transform:uppercase; font-weight:700; border:none; cursor:none; transition:background .3s; }
+  .btn-cart:hover { background:var(--gold); }
+  .btn-wish { width:50px; border:1px solid rgba(245,237,216,.18); background:transparent; color:var(--cream); font-size:1.1rem; cursor:none; transition:all .3s; }
+  .btn-wish:hover { border-color:var(--gold); color:var(--gold); }
+
+  /* MARQUEE */
+  .marquee-sec { position:relative; z-index:2; padding:19px 0; background:var(--amber); overflow:hidden; white-space:nowrap; }
+  .marquee-track { display:inline-flex; animation:mq 22s linear infinite; }
+  .marquee-item { font-family:'Playfair Display',serif; font-size:.8rem; font-weight:700; color:var(--deep); letter-spacing:.05em; padding:0 20px; text-transform:uppercase; display:inline-flex; align-items:center; gap:20px; }
+  .marquee-item::after { content:'✦'; font-size:.52rem; }
+  @keyframes mq { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+  /* PRODUCTS */
+  .products-section { position:relative; z-index:2; padding:100px 60px; background:var(--light); color:var(--text); }
+  .sec-hdr { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:64px; }
+  .sec-label { font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.25em; color:var(--amber); text-transform:uppercase; margin-bottom:13px; display:flex; align-items:center; gap:12px; }
+  .sec-label::before { content:''; width:26px; height:1px; background:var(--amber); display:block; }
+  .sec-title { font-family:'Playfair Display',serif; font-size:clamp(1.9rem,4vw,3rem); font-weight:900; color:var(--text); line-height:1.1; }
+  .sec-title em { color:var(--amber); font-style:italic; }
+  .view-all { font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--amber); text-decoration:none; border-bottom:1px solid var(--amber); padding-bottom:2px; transition:opacity .3s; white-space:nowrap; }
+  .view-all:hover { opacity:.6; }
+  .product-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  .product-card { background:white; overflow:hidden; cursor:none; transition:transform .4s cubic-bezier(.16,1,.3,1); box-shadow:0 4px 18px rgba(0,0,0,.06); }
+  .product-card:hover { transform:translateY(-8px); }
+  .product-card:hover .pd3d { transform:scale(1.1) rotateY(10deg); }
+  .product-card:hover .pd-ov { opacity:1; }
+  .pd-vis { height:210px; position:relative; overflow:hidden; background:var(--cream); display:flex; align-items:center; justify-content:center; perspective:700px; }
+  .pd3d { font-size:4.2rem; transition:transform .5s cubic-bezier(.16,1,.3,1); transform-style:preserve-3d; filter:drop-shadow(0 14px 22px rgba(0,0,0,.18)); }
+  .pd-ov { position:absolute; inset:0; background:rgba(200,135,58,.88); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .35s; }
+  .pd-btn { background:var(--deep); color:white; padding:10px 24px; font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; border:none; cursor:none; }
+  .pd-badge { position:absolute; top:13px; left:13px; background:var(--amber); color:white; font-family:'Space Mono',monospace; font-size:.5rem; letter-spacing:.1em; text-transform:uppercase; padding:4px 9px; font-weight:700; }
+  .pd-info { padding:16px 18px; }
+  .pd-name { font-family:'Playfair Display',serif; font-size:1.05rem; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .pd-origin { font-family:'Space Mono',monospace; font-size:.55rem; letter-spacing:.12em; color:rgba(44,24,16,.36); text-transform:uppercase; margin-bottom:10px; }
+  .pd-row { display:flex; justify-content:space-between; align-items:center; }
+  .pd-price { font-family:'Playfair Display',serif; font-size:1.2rem; font-weight:700; color:var(--amber); }
+  .pd-wt { font-family:'Space Mono',monospace; font-size:.55rem; color:rgba(44,24,16,.36); letter-spacing:.1em; }
+
+  /* STATS */
+  .stats-sec { position:relative; z-index:2; padding:64px 60px; background:white; display:grid; grid-template-columns:repeat(4,1fr); }
+  .stat-item { padding:32px; border-right:1px solid rgba(44,24,16,.07); text-align:center; }
+  .stat-item:last-child { border-right:none; }
+  .stat-num { font-family:'Playfair Display',serif; font-size:3rem; font-weight:900; color:var(--amber); display:block; line-height:1; margin-bottom:7px; }
+  .stat-lbl { font-family:'Space Mono',monospace; font-size:.56rem; letter-spacing:.2em; color:rgba(44,24,16,.36); text-transform:uppercase; }
+
+  /* WHY */
+  .why-sec { position:relative; z-index:2; padding:100px 60px; background:var(--cream); color:var(--text); }
+  .feat-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:40px; margin-top:64px; }
+  .feat-card { padding:40px 34px; border:1px solid rgba(44,24,16,.08); transition:all .4s cubic-bezier(.16,1,.3,1); }
+  .feat-card:hover { background:var(--deep); color:var(--cream); transform:translateY(-4px); border-color:var(--deep); }
+  .feat-card:hover .ft,.feat-card:hover .fn { color:var(--gold); }
+  .feat-card:hover .fd { color:rgba(245,237,216,.58); }
+  .fn { font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.2em; color:var(--amber); margin-bottom:20px; transition:color .4s; }
+  .fi { font-size:2rem; margin-bottom:16px; }
+  .ft { font-family:'Playfair Display',serif; font-size:1.25rem; font-weight:700; color:var(--text); margin-bottom:12px; transition:color .4s; }
+  .fd { font-size:.96rem; color:rgba(44,24,16,.56); line-height:1.7; font-weight:300; transition:color .4s; }
+
+  /* TESTIMONIALS */
+  .test-sec { position:relative; z-index:2; padding:100px 60px; background:var(--deep); overflow:hidden; }
+  .test-sec::before { content:'"'; position:absolute; top:-70px; left:24px; font-family:'Playfair Display',serif; font-size:26rem; color:rgba(212,168,83,.03); line-height:1; pointer-events:none; }
+  .test-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:26px; margin-top:64px; }
+  .test-card { padding:34px; border:1px solid rgba(245,237,216,.07); position:relative; }
+  .test-card::before { content:''; position:absolute; top:0; left:0; width:34px; height:2px; background:var(--amber); }
+  .stars { font-size:.65rem; color:var(--gold); letter-spacing:2px; margin-bottom:13px; }
+  .test-txt { font-family:'Playfair Display',serif; font-size:.98rem; font-style:italic; color:rgba(245,237,216,.76); line-height:1.8; margin-bottom:24px; }
+  .test-auth { display:flex; align-items:center; gap:11px; }
+  .auth-av { width:36px; height:36px; border-radius:50%; background:var(--amber); display:flex; align-items:center; justify-content:center; font-family:'Playfair Display',serif; font-weight:700; color:var(--deep); font-size:.95rem; }
+  .auth-nm { font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.12em; color:var(--cream); font-weight:700; text-transform:uppercase; }
+  .auth-lc { font-size:.82rem; color:rgba(245,237,216,.3); font-weight:300; }
+
+  /* CTA */
+  .cta-sec { position:relative; z-index:2; padding:85px 60px; background:var(--amber); display:flex; justify-content:space-between; align-items:center; overflow:hidden; }
+  .cta-sec::before { content:'✦'; position:absolute; right:-40px; top:-70px; font-size:14rem; color:rgba(26,15,0,.06); pointer-events:none; }
+  .cta-txt h2 { font-family:'Playfair Display',serif; font-size:clamp(1.8rem,3.6vw,3rem); font-weight:900; color:var(--deep); line-height:1.1; margin-bottom:12px; }
+  .cta-txt p { font-size:1rem; color:rgba(26,15,0,.58); font-weight:300; }
+  .cta-form { display:flex; gap:0; min-width:350px; }
+  .cta-in { flex:1; padding:16px 20px; background:rgba(26,15,0,.1); border:1px solid rgba(26,15,0,.16); border-right:none; font-family:'Cormorant Garamond',serif; font-size:.98rem; color:var(--deep); outline:none; }
+  .cta-in::placeholder { color:rgba(26,15,0,.38); }
+  .cta-sub { background:var(--deep); color:var(--cream); padding:16px 24px; font-family:'Space Mono',monospace; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; border:none; font-weight:700; cursor:none; transition:background .3s; }
+  .cta-sub:hover { background:var(--warm); }
+
+  /* FOOTER */
+  footer { position:relative; z-index:2; padding:65px 60px 34px; background:#0E0800; }
+  .ft-top { display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:48px; margin-bottom:48px; padding-bottom:48px; border-bottom:1px solid rgba(245,237,216,.06); }
+  .ft-brand p { font-size:.94rem; color:rgba(245,237,216,.36); line-height:1.8; margin-top:16px; font-weight:300; max-width:270px; }
+  .ft-col h4 { font-family:'Space Mono',monospace; font-size:.56rem; letter-spacing:.2em; color:var(--amber); text-transform:uppercase; margin-bottom:20px; }
+  .ft-col ul { list-style:none; }
+  .ft-col ul li { margin-bottom:10px; }
+  .ft-col ul li a { color:rgba(245,237,216,.42); text-decoration:none; font-size:.92rem; transition:color .3s; }
+  .ft-col ul li a:hover { color:var(--gold); }
+  .ft-bot { display:flex; justify-content:space-between; align-items:center; }
+  .ft-copy { font-family:'Space Mono',monospace; font-size:.56rem; letter-spacing:.1em; color:rgba(245,237,216,.2); }
+  .ft-soc { display:flex; gap:16px; }
+  .ft-soc a { font-family:'Space Mono',monospace; font-size:.56rem; letter-spacing:.1em; color:rgba(245,237,216,.26); text-decoration:none; transition:color .3s; }
+  .ft-soc a:hover { color:var(--gold); }
+
+  /* CART */
+  .cart-fl { position:fixed; bottom:34px; right:34px; z-index:500; background:var(--amber); width:56px; height:56px; display:flex; align-items:center; justify-content:center; font-size:1.35rem; cursor:none; transition:all .3s; box-shadow:0 8px 26px rgba(200,135,58,.38); }
+  .cart-fl:hover { background:var(--gold); transform:scale(1.07); }
+  .cart-ct { position:absolute; top:-6px; right:-6px; background:var(--deep); color:var(--gold); width:22px; height:22px; border-radius:50%; font-family:'Space Mono',monospace; font-size:.56rem; font-weight:700; display:flex; align-items:center; justify-content:center; }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="C"></div>
+<div class="cursor-ring" id="CR"></div>
+<div class="fruit-label" id="fruitLabel">
+  <div class="fruit-label-name" id="flName"></div>
+  <div class="fruit-label-hint">Click to explore</div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Nut<span>Vana</span></div>
+  <ul class="nav-links">
+    <li><a href="#products">Shop</a></li>
+    <li><a href="#why">Why Us</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+    <li><a href="#cta" class="nav-cta">Order Now</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-ui">
+    <div class="hero-tag">Premium Quality · Est. 2018</div>
+    <h1>Nature's Finest<em>Dry Fruits</em></h1>
+    <p class="hero-sub">Hand-selected from the world's finest orchards. Click any fruit floating above to explore it.</p>
+  </div>
+  <div class="scroll-ind"><div class="scroll-line"></div>Scroll to explore</div>
+  <div class="hero-hint"><span>👆</span>Click on any 3D fruit</div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee-sec">
+  <div class="marquee-track">
+    <span class="marquee-item">Kashmiri Walnuts</span><span class="marquee-item">California Almonds</span><span class="marquee-item">Turkish Pistachios</span><span class="marquee-item">Afghan Raisins</span><span class="marquee-item">Brazilian Cashews</span><span class="marquee-item">Iranian Figs</span><span class="marquee-item">Medjool Dates</span><span class="marquee-item">Macadamia Nuts</span><span class="marquee-item">Kashmiri Walnuts</span><span class="marquee-item">California Almonds</span><span class="marquee-item">Turkish Pistachios</span><span class="marquee-item">Afghan Raisins</span><span class="marquee-item">Brazilian Cashews</span><span class="marquee-item">Iranian Figs</span><span class="marquee-item">Medjool Dates</span><span class="marquee-item">Macadamia Nuts</span>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<section class="products-section" id="products">
+  <div class="sec-hdr">
+    <div><div class="sec-label">Best Sellers</div><h2 class="sec-title">Premium <em>Selection</em></h2></div>
+    <a href="#" class="view-all">View All →</a>
+  </div>
+  <div class="product-grid" id="pgrid"></div>
+</section>
+
+<!-- STATS -->
+<div class="stats-sec">
+  <div class="stat-item"><span class="stat-num" data-t="50">0</span><span class="stat-lbl">Varieties Available</span></div>
+  <div class="stat-item"><span class="stat-num" data-t="12">0</span><span class="stat-lbl">Countries Sourced</span></div>
+  <div class="stat-item"><span class="stat-num" data-t="25000">0</span><span class="stat-lbl">Happy Customers</span></div>
+  <div class="stat-item"><span class="stat-num" data-t="6">0</span><span class="stat-lbl">Years of Excellence</span></div>
+</div>
+
+<!-- WHY -->
+<section class="why-sec" id="why">
+  <div class="sec-label">Why Choose Us</div>
+  <h2 class="sec-title">Crafted for the <em>Discerning</em> Palate</h2>
+  <div class="feat-grid">
+    <div class="feat-card"><div class="fn">01</div><div class="fi">🌱</div><div class="ft">100% Natural</div><div class="fd">Zero preservatives, no artificial colors. Tested for purity, sourced from certified organic farms worldwide.</div></div>
+    <div class="feat-card"><div class="fn">02</div><div class="fi">✈️</div><div class="ft">Direct Sourcing</div><div class="fd">We partner directly with farmers in 12 countries. No middlemen — better prices, fairer wages.</div></div>
+    <div class="feat-card"><div class="fn">03</div><div class="fi">📦</div><div class="ft">Vacuum Sealed</div><div class="fd">Nitrogen-flushed packaging locks in freshness for up to 18 months. Delivered in elegant packaging.</div></div>
+    <div class="feat-card"><div class="fn">04</div><div class="fi">🔬</div><div class="ft">Lab Certified</div><div class="fd">Every batch tested for aflatoxins, pesticides & heavy metals. Full reports shared with every order.</div></div>
+    <div class="feat-card"><div class="fn">05</div><div class="fi">🚚</div><div class="ft">Express Delivery</div><div class="fd">Pan-India delivery in 2–4 days. Free shipping on orders above ₹799. Cold-chain for perishables.</div></div>
+    <div class="feat-card"><div class="fn">06</div><div class="fi">↩️</div><div class="ft">30-Day Returns</div><div class="fd">Not satisfied? Return it, no questions asked. Our quality guarantee ensures your satisfaction.</div></div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="test-sec" id="reviews">
+  <div class="sec-label" style="color:rgba(212,168,83,.75)">What People Say</div>
+  <h2 style="font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4vw,3rem);font-weight:900;line-height:1.1;margin-top:10px;color:var(--cream)">Loved by <em style="color:var(--gold);font-style:italic">Thousands</em></h2>
+  <div class="test-grid">
+    <div class="test-card"><div class="stars">★★★★★</div><div class="test-txt">The Kashmiri walnuts are extraordinary — plump, fresh, and nothing like supermarket ones. NutVana is my only go-to now.</div><div class="test-auth"><div class="auth-av">P</div><div><div class="auth-nm">Priya Mehta</div><div class="auth-lc">Mumbai</div></div></div></div>
+    <div class="test-card"><div class="stars">★★★★★</div><div class="test-txt">I've tried every brand out there. NutVana's Medjool dates have ruined all others for me. Quality and service is unmatched.</div><div class="test-auth"><div class="auth-av">R</div><div><div class="auth-nm">Rahul Sharma</div><div class="auth-lc">Delhi</div></div></div></div>
+    <div class="test-card"><div class="stars">★★★★★</div><div class="test-txt">Gifted NutVana hampers to our entire office for Diwali. Everyone was impressed. The packaging alone is a statement of luxury.</div><div class="test-auth"><div class="auth-av">S</div><div><div class="auth-nm">Sunita Verma</div><div class="auth-lc">Bangalore</div></div></div></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-sec" id="cta">
+  <div class="cta-txt"><h2>Join 25,000+<br>Happy Customers</h2><p>Get 10% off your first order + exclusive seasonal offers.</p></div>
+  <div class="cta-form"><input type="email" class="cta-in" placeholder="Your email address"><button class="cta-sub">Subscribe</button></div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-top">
+    <div class="ft-brand"><div class="nav-logo" style="font-size:1.65rem">Nut<span>Vana</span></div><p>Premium dry fruits, ethically sourced from the world's finest orchards, delivered to your doorstep.</p></div>
+    <div class="ft-col"><h4>Shop</h4><ul><li><a href="#">Nuts & Seeds</a></li><li><a href="#">Dried Fruits</a></li><li><a href="#">Gift Hampers</a></li><li><a href="#">Mixed Packs</a></li><li><a href="#">Bulk Orders</a></li></ul></div>
+    <div class="ft-col"><h4>Company</h4><ul><li><a href="#">Our Story</a></li><li><a href="#">Sourcing</a></li><li><a href="#">Lab Reports</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li></ul></div>
+    <div class="ft-col"><h4>Support</h4><ul><li><a href="#">Track Order</a></li><li><a href="#">Returns</a></li><li><a href="#">FAQ</a></li><li><a href="#">Contact</a></li><li><a href="#">WhatsApp</a></li></ul></div>
+  </div>
+  <div class="ft-bot">
+    <div class="ft-copy">© 2025 NutVana. All rights reserved. Made with ♥ in India.</div>
+    <div class="ft-soc"><a href="#">Instagram</a><a href="#">Facebook</a><a href="#">Twitter</a><a href="#">YouTube</a></div>
+  </div>
+</footer>
+
+<!-- CART -->
+<div class="cart-fl" id="cartBtn">🛒<span class="cart-ct" id="cartCt">0</span></div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="MB">
+  <div class="modal" id="MD">
+    <div class="modal-hero" id="MH"><div class="modal-emoji" id="ME"></div></div>
+    <button class="modal-close" id="MC">✕</button>
+    <div class="modal-body">
+      <div class="m-tag" id="MTAG"></div>
+      <div class="m-name" id="MNAME"></div>
+      <div class="m-origin" id="MORG"></div>
+      <div class="m-badges" id="MBDG"></div>
+      <div class="m-desc" id="MDESC"></div>
+      <div class="m-stats" id="MSTAT"></div>
+      <div class="m-prices" id="MPRC"></div>
+      <div class="m-actions">
+        <button class="btn-cart" onclick="addToCart()">🛒 Add to Cart</button>
+        <button class="btn-wish">♡</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ══════════════════════════════
+// DATA
+// ══════════════════════════════
+const FRUITS = [
+  { id:0, name:'Kashmiri Walnut', emoji:'🌰', origin:'📍 Kashmir Valley, India', tag:'Best Seller', col:0x8B4513, shape:'walnut',
+    desc:'Hand-picked from ancient walnut groves in the Kashmir Valley at 1,600m altitude. These thin-shelled, paper-white walnuts are prized for exceptional taste, creamy texture, and high omega-3 content — considered the finest in the world.',
+    stats:[['Protein','15g'],['Omega-3','10.8g'],['Shelf','18 mo']], prices:[{w:'250g',p:'₹480'},{w:'500g',p:'₹920'},{w:'1 kg',p:'₹1,750'}],
+    badges:['org','cert'], badge:'Best Seller' },
+  { id:1, name:'Mamra Almond', emoji:'🥜', origin:'📍 Afghanistan', tag:'Organic', col:0xDEB887, shape:'almond',
+    desc:'The king of almonds — Mamra variety grown in Afghan highlands. Unlike regular almonds, Mamra is naturally thin-skinned, oil-rich, and extraordinarily nutritious. Cold-pressed from ancient trees, never heat-treated.',
+    stats:[['Protein','21g'],['Vitamin E','25mg'],['Shelf','12 mo']], prices:[{w:'250g',p:'₹1,200'},{w:'500g',p:'₹2,300'},{w:'1 kg',p:'₹4,400'}],
+    badges:['org','cert','cold'], badge:'Organic' },
+  { id:2, name:'Medjool Date', emoji:'🟤', origin:'📍 Medina, Saudi Arabia', tag:'Premium', col:0x8B6914, shape:'date',
+    desc:'Called the "King of Dates," Medjool dates are large, soft, and naturally sweet with a rich caramel flavour. Sourced directly from premium Saudi farms — the freshest, most succulent dates available. No sugar added, ever.',
+    stats:[['Sugar','66g'],['Potassium','696mg'],['Fibre','6.7g']], prices:[{w:'500g',p:'₹700'},{w:'1 kg',p:'₹1,350'},{w:'2 kg',p:'₹2,600'}],
+    badges:['cert','del'], badge:'Premium' },
+  { id:3, name:'Pistachio Kernel', emoji:'🌿', origin:'📍 Rafsanjan, Iran', tag:'Pure', col:0x4A7C59, shape:'pistachio',
+    desc:"Iran's Rafsanjan region produces the world's most celebrated pistachios. Our kernels are hand-shelled, sun-dried, delivered without salt or oil. Bright green, buttery, and intensely flavourful — a true luxury.",
+    stats:[['Protein','20g'],['Fat','45g'],['Fibre','10g']], prices:[{w:'250g',p:'₹860'},{w:'500g',p:'₹1,650'},{w:'1 kg',p:'₹3,150'}],
+    badges:['org','cert'], badge:null },
+  { id:4, name:'Golden Raisin', emoji:'🍇', origin:'📍 Kandahar, Afghanistan', tag:'Classic', col:0xC8A850, shape:'raisin',
+    desc:'Sun-dried from seedless green grapes in the fertile Kandahar valley. These golden raisins are plump, naturally sweet, and lightly dried to retain maximum nutrition. No sulphur dioxide, no added sugar — pure and wholesome.',
+    stats:[['Iron','2.6mg'],['Calcium','50mg'],['Fibre','3.7g']], prices:[{w:'500g',p:'₹320'},{w:'1 kg',p:'₹600'},{w:'2 kg',p:'₹1,140'}],
+    badges:['org','cert'], badge:null },
+  { id:5, name:'W240 Cashew', emoji:'🥥', origin:'📍 Goa, India', tag:'Local Pride', col:0xFFF8DC, shape:'cashew',
+    desc:'W240 denotes the highest cashew grade — only 240 whole kernels per pound, meaning each piece is large and perfect. Steam-processed, never deep-fried. Ivory-white, buttery, and utterly addictive.',
+    stats:[['Protein','18g'],['Zinc','5.6mg'],['Magnesium','292mg']], prices:[{w:'250g',p:'₹640'},{w:'500g',p:'₹1,220'},{w:'1 kg',p:'₹2,350'}],
+    badges:['cert','del'], badge:null },
+  { id:6, name:'Dried Blueberry', emoji:'🫐', origin:'📍 Oregon, USA', tag:'New', col:0x4B0082, shape:'berry',
+    desc:'Flash-dried Oregon blueberries at peak ripeness to lock in their extraordinary antioxidant content. Plump, tangy-sweet, and vibrant purple. No added sugar, no sulphites — perfect for snacking or baking.',
+    stats:[['Antioxidants','9,621'], ['Vitamin C','9.7mg'],['Fibre','4.9g']], prices:[{w:'200g',p:'₹580'},{w:'400g',p:'₹1,100'},{w:'800g',p:'₹2,050'}],
+    badges:['org','cert'], badge:'New' },
+  { id:7, name:'Macadamia Whole', emoji:'⚪', origin:'📍 Hawaii, USA', tag:'Rare', col:0xF5DEB3, shape:'macadamia',
+    desc:'The most luxurious nut in the world. Hawaiian macadamias are cold-cracked to preserve their delicate, buttery flesh. Exceptionally rich in monounsaturated fats — a velvety, almost chocolatey flavour unmatched anywhere.',
+    stats:[['Fat','75g'],['Manganese','4.1mg'],['Thiamine','1.2mg']], prices:[{w:'200g',p:'₹1,800'},{w:'400g',p:'₹3,400'},{w:'600g',p:'₹4,900'}],
+    badges:['cert','cold'], badge:'Rare' }
+];
+
+// ══════════════════════════════
+// CURSOR
+// ══════════════════════════════
+const C = document.getElementById('C'), CR = document.getElementById('CR');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
+(function ac(){C.style.left=mx+'px';C.style.top=my+'px';rx+=(mx-rx)*.12;ry+=(my-ry)*.12;CR.style.left=rx+'px';CR.style.top=ry+'px';requestAnimationFrame(ac);})();
+
+// ══════════════════════════════
+// THREE.JS
+// ══════════════════════════════
+const cvs = document.getElementById('hero-canvas');
+const R = new THREE.WebGLRenderer({canvas:cvs,antialias:true,alpha:true});
+R.setPixelRatio(Math.min(devicePixelRatio,2));
+R.shadowMap.enabled = true;
+
+const SC = new THREE.Scene();
+const CAM = new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.1,100);
+CAM.position.z = 16;
+
+// Lights
+SC.add(new THREE.AmbientLight(0xF5EDD8, 0.55));
+const L1 = new THREE.PointLight(0xC8873A,5,40); L1.position.set(6,6,8); SC.add(L1);
+const L2 = new THREE.PointLight(0xD4A853,3,30); L2.position.set(-6,-4,5); SC.add(L2);
+const L3 = new THREE.PointLight(0x8B4513,2,20); L3.position.set(0,8,-4); SC.add(L3);
+
+function M(col,r=0.5,m=0.1){return new THREE.MeshStandardMaterial({color:col,roughness:r,metalness:m});}
+
+function buildFruitMesh(f){
+  const G = new THREE.Group();
+  switch(f.shape){
+    case 'walnut':{
+      const b=new THREE.Mesh(new THREE.SphereGeometry(.7,16,16),M(f.col,.65,.08));b.scale.set(1,.82,.88);
+      const r=new THREE.Mesh(new THREE.TorusGeometry(.48,.08,6,16),M(0x3B1F0A));r.rotation.x=Math.PI/2;
+      G.add(b,r);break;
+    }
+    case 'almond':{
+      const b=new THREE.Mesh(new THREE.SphereGeometry(.5,12,12),M(f.col,.6,.05));b.scale.set(.6,1,.55);
+      const sk=new THREE.Mesh(new THREE.SphereGeometry(.52,8,8),M(0xA0522D,.8));sk.scale.set(.62,1.02,.57);sk.material.transparent=true;sk.material.opacity=.32;
+      G.add(b,sk);break;
+    }
+    case 'date':{
+      const b=new THREE.Mesh(new THREE.CylinderGeometry(.35,.3,.9,12),M(f.col,.55,.12));b.scale.set(1,1,.8);
+      const t=new THREE.Mesh(new THREE.SphereGeometry(.32,10,10),M(f.col,.55,.12));t.position.y=.52;t.scale.set(1,.7,.8);
+      G.add(b,t);break;
+    }
+    case 'pistachio':{
+      const sh=new THREE.Mesh(new THREE.SphereGeometry(.55,12,12),M(0xE8D5A3,.7,.05));sh.scale.set(.8,1,.7);
+      const k=new THREE.Mesh(new THREE.SphereGeometry(.38,10,10),M(f.col,.6,.05));k.scale.set(.7,.9,.65);
+      const sp=new THREE.Mesh(new THREE.BoxGeometry(.9,.04,.6),M(0x2a1200));sp.position.set(0,.48,0);sp.rotation.z=.15;
+      G.add(sh,k,sp);break;
+    }
+    case 'raisin':{
+      const b=new THREE.Mesh(new THREE.SphereGeometry(.52,12,12),M(f.col,.75,.05));b.scale.set(1,.75,.88);
+      const w=new THREE.Mesh(new THREE.TorusGeometry(.3,.04,4,10),M(0xA08020,.9));w.rotation.x=.5;w.position.y=.1;
+      G.add(b,w);break;
+    }
+    case 'cashew':{
+      const pts=[];for(let i=0;i<=20;i++){const t=i/20;const x=-0.6+t*1.2;const y=Math.sin(t*Math.PI)*0.65;pts.push(new THREE.Vector3(x,y,0));}
+      const tube=new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts),20,.22,8),M(f.col,.55,.08));
+      G.add(tube);break;
+    }
+    case 'berry':{
+      const b=new THREE.Mesh(new THREE.SphereGeometry(.58,14,14),M(f.col,.6,.1));
+      const cr=new THREE.Mesh(new THREE.ConeGeometry(.14,.18,5),M(0x2D5A27,.7));cr.position.y=.62;
+      for(let a=0;a<5;a++){const ang=a*72*Math.PI/180;const bp=new THREE.Mesh(new THREE.SphereGeometry(.1,6,6),M(0x350060,.7));bp.position.set(Math.cos(ang)*.26,.06,Math.sin(ang)*.26);G.add(bp);}
+      G.add(b,cr);break;
+    }
+    case 'macadamia':{
+      const b=new THREE.Mesh(new THREE.SphereGeometry(.62,16,16),M(f.col,.45,.15));
+      const rn=new THREE.Mesh(new THREE.TorusGeometry(.55,.06,6,20),M(0xE0C890,.5,.2));rn.rotation.x=Math.PI/3;
+      G.add(b,rn);break;
+    }
+    default:G.add(new THREE.Mesh(new THREE.SphereGeometry(.6,14,14),M(f.col)));
+  }
+  return G;
+}
+
+const POSITIONS = [
+  [-5.8,2.4,-1],[-.2,3.4,.4],[5.8,2.4,-1],
+  [-7.2,-.4,-2],[3.8,-.7,.4],[-3.1,-2.6,-1],
+  [6.8,-1.6,-2],[1.6,.6,1.4]
+];
+
+const fruitObjs=[]; const meshPool=[];
+FRUITS.forEach((f,i)=>{
+  const g=buildFruitMesh(f);
+  const p=POSITIONS[i]; g.position.set(p[0],p[1],p[2]);
+  g.userData.fid=f.id;
+  const s=.82+Math.random()*.38; g.scale.setScalar(s);
+  SC.add(g);
+  fruitObjs.push({g,f,fo:Math.random()*Math.PI*2,fs:.35+Math.random()*.28,fa:.12+Math.random()*.13,by:p[1],rx:(Math.random()-.5)*.012,ry:(Math.random()-.5)*.015,rz:(Math.random()-.5)*.008,sc:s,hov:false});
+  g.traverse(ch=>{if(ch.isMesh){ch.userData.fid=f.id;meshPool.push(ch);}});
+});
+
+function onResize(){R.setSize(innerWidth,innerHeight);CAM.aspect=innerWidth/innerHeight;CAM.updateProjectionMatrix();}
+onResize(); window.addEventListener('resize',onResize);
+
+const ray=new THREE.Raycaster(); const mp=new THREE.Vector2();
+let hovId=-1, camTX=0, camTY=0, T=0;
+
+window.addEventListener('mousemove',e=>{
+  mp.x=(e.clientX/innerWidth)*2-1; mp.y=-(e.clientY/innerHeight)*2+1;
+  camTX=(e.clientX/innerWidth-.5)*1.6; camTY=-(e.clientY/innerHeight-.5)*.9;
+});
+
+cvs.addEventListener('click',e=>{
+  ray.setFromCamera(mp,CAM);
+  const hits=ray.intersectObjects(meshPool,false);
+  if(hits.length>0){ const fid=hits[0].object.userData.fid; openModal(FRUITS[fid]); }
+});
+
+const lbl=document.getElementById('fruitLabel'),flN=document.getElementById('flName');
+
+(function anim(){
+  requestAnimationFrame(anim); T+=.01;
+  CAM.position.x+=(camTX-CAM.position.x)*.024;
+  CAM.position.y+=(camTY-CAM.position.y)*.024;
+  CAM.lookAt(0,0,0);
+  L1.position.x=Math.sin(T*.4)*7; L1.position.y=Math.cos(T*.3)*5;
+  L2.position.x=Math.cos(T*.35)*6; L2.position.y=Math.sin(T*.5)*4;
+
+  ray.setFromCamera(mp,CAM);
+  const hits=ray.intersectObjects(meshPool,false);
+  const nHov=hits.length>0?hits[0].object.userData.fid:-1;
+
+  // Update label position
+  if(nHov !== -1){
+    lbl.style.display='block';
+    lbl.style.left=(mx+18)+'px'; lbl.style.top=(my-10)+'px';
+    flN.textContent=FRUITS[nHov].name;
+  } else { lbl.style.display='none'; }
+
+  fruitObjs.forEach(o=>{
+    const isH=o.f.id===nHov; o.hov=isH;
+    o.g.position.y=o.by+Math.sin(T*o.fs+o.fo)*o.fa;
+    o.g.rotation.x+=o.rx; o.g.rotation.y+=o.ry+(isH?.022:0); o.g.rotation.z+=o.rz;
+    const tSc=o.sc*(isH?1.28:1);
+    o.g.scale.x+=(tSc-o.g.scale.x)*.1;
+    o.g.scale.y+=(tSc-o.g.scale.y)*.1;
+    o.g.scale.z+=(tSc-o.g.scale.z)*.1;
+  });
+
+  if(nHov!==hovId){ hovId=nHov; C.classList.toggle('hov',hovId!==-1); }
+  R.render(SC,CAM);
+})();
+
+// ══════════════════════════════
+// MODAL
+// ══════════════════════════════
+const badgeMap={org:['b-org','🌱 Organic'],cert:['b-cert','✓ FSSAI Certified'],cold:['b-cert','❄ Cold Pressed'],del:['b-del','🚚 Express Delivery']};
+
+function openModal(f){
+  document.getElementById('ME').textContent=f.emoji;
+  document.getElementById('MTAG').textContent=f.tag;
+  document.getElementById('MNAME').textContent=f.name;
+  document.getElementById('MORG').textContent=f.origin;
+  document.getElementById('MDESC').textContent=f.desc;
+  document.getElementById('MBDG').innerHTML=f.badges.map(b=>`<span class="badge ${badgeMap[b][0]}">${badgeMap[b][1]}</span>`).join('');
+  document.getElementById('MSTAT').innerHTML=f.stats.map(([l,v])=>`<div class="m-stat"><span class="m-stat-v">${v}</span><span class="m-stat-l">${l}</span></div>`).join('');
+  document.getElementById('MPRC').innerHTML=f.prices.map((p,i)=>`<div class="price-pill ${i===0?'act':''}" onclick="selP(this)"><span class="pw">${p.w}</span><span class="pp">${p.p}</span></div>`).join('');
+  const r=(f.col>>16)&255,g2=(f.col>>8)&255,b2=f.col&255;
+  document.getElementById('MH').style.background=`radial-gradient(ellipse,rgba(${r},${g2},${b2},.22) 0%,rgba(26,15,0,1) 78%)`;
+  document.getElementById('MB').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function selP(el){document.querySelectorAll('.price-pill').forEach(p=>p.classList.remove('act'));el.classList.add('act');}
+function closeModal(){document.getElementById('MB').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('MC').onclick=closeModal;
+document.getElementById('MB').onclick=e=>{if(e.target===document.getElementById('MB'))closeModal();};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+// ══════════════════════════════
+// PRODUCT GRID
+// ══════════════════════════════
+const pg=document.getElementById('pgrid');
+FRUITS.forEach(f=>{
+  pg.innerHTML+=`<div class="product-card" onclick="openModal(FRUITS[${f.id}])">
+    <div class="pd-vis">${f.badge?`<div class="pd-badge">${f.badge}</div>`:''}
+      <div class="pd3d">${f.emoji}</div>
+      <div class="pd-ov"><button class="pd-btn">View Details</button></div>
+    </div>
+    <div class="pd-info">
+      <div class="pd-name">${f.name}</div>
+      <div class="pd-origin">${f.origin}</div>
+      <div class="pd-row"><span class="pd-price">${f.prices[0].p}</span><span class="pd-wt">${f.prices[0].w}</span></div>
+    </div></div>`;
+});
+
+// ══════════════════════════════
+// CART
+// ══════════════════════════════
+let ct=0;
+function addToCart(){ct++;document.getElementById('cartCt').textContent=ct;const b=document.getElementById('cartBtn');b.style.transform='scale(1.25)';setTimeout(()=>{b.style.transform='';},200);closeModal();}
+
+// ══════════════════════════════
+// STATS COUNTER
+// ══════════════════════════════
+new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(!e.isIntersecting)return;
+    document.querySelectorAll('.stat-num').forEach(el=>{
+      const t=parseInt(el.dataset.t); let c=0; const s=t/55;
+      const iv=setInterval(()=>{c=Math.min(c+s,t);el.textContent=(t>=1000?Math.floor(c).toLocaleString('en-IN'):Math.floor(c))+(t===6?'':'+');if(c>=t)clearInterval(iv);},22);
+    });
+  });
+},{threshold:.3}).observe(document.querySelector('.stats-sec'));
+</script>
+</body>
+</html>
